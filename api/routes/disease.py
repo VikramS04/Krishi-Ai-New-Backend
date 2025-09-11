@@ -30,8 +30,8 @@ def detect_disease():
                 'detection_result': detection_result
             }), 200
             
-        # Create disease detection record
-        disease_detection = DiseaseDetection(
+        ##### Create disease detection record
+        #disease_detection = DiseaseDetection(
             user_id=data['user_id'],
             image_path=data.get('image_path'),
             crop_type=data.get('crop_type'),
@@ -41,7 +41,7 @@ def detect_disease():
             affected_area_percentage=detection_result['affected_area_percentage'],
             treatment_recommendations=json.dumps(detection_result['treatment_recommendations']),
             preventive_measures=json.dumps(detection_result['preventive_measures'])
-        )
+        #)
         
         db.session.add(disease_detection)
         db.session.commit()
