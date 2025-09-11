@@ -22,6 +22,14 @@ def detect_disease():
         # Simulate disease detection (in real implementation, this would use ML models)
         detection_result = simulate_disease_detection(data.get('crop_type', 'Unknown'))
         
+        # --- NEW: Skip DB writes on Vercel ---
+        if os.getenv("VERCEL", "false").lower() == "true":
+            return jsonify({
+                'success': True,
+                'message': '⚠️ Running on Vercel: Skipping database save (read-only filesystem)',
+                'detection_result': detection_result
+            }), 200
+            
         # Create disease detection record
         disease_detection = DiseaseDetection(
             user_id=data['user_id'],

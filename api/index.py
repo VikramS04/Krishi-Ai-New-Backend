@@ -3,7 +3,7 @@ import sys
 # DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-#Dont Know
+# Importing Flask and related modules for API setup
 
 from flask import Flask, send_from_directory
 from flask_cors import CORS
