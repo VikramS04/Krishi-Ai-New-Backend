@@ -43,14 +43,14 @@ def detect_disease():
             preventive_measures=json.dumps(detection_result['preventive_measures'])
         #)
         
-        db.session.add(disease_detection)
-        db.session.commit()
+        #db.session.add(disease_detection)
+        #db.session.commit()
         
         return jsonify({
             'success': True,
-            'data': disease_detection.to_dict(),
+            'message': '✅ Detection simulated successfully (DB save skipped for testing)',
             'detection_result': detection_result
-        }), 201
+        }), 200
         
     except Exception as e:
         db.session.rollback()
