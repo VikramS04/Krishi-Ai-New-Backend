@@ -3,44 +3,29 @@ const axios = require('axios')
 const BASE_URL = 'https://api.openweathermap.org/data/2.5'
 const API_KEY = process.env.OPENWEATHER_API_KEY
 
-// ─── Current Weather ──────────────────────────────────────────────────────────
-const getCurrentWeather = async (location) => {
-  const res = await axios.get(`${BASE_URL}/weather`, {
-    params: { q: location, appid: API_KEY, units: 'metric' },
-    timeout: 8000,
-  })
-  const d = res.data
-  return {
-    location: d.name,
-    country: d.sys.country,
-    temperature: Math.round(d.main.temp),
-    feels_like: Math.round(d.main.feels_like),
-    condition: d.weather[0].description,
-    condition_main: d.weather[0].main,
-    icon: d.weather[0].icon,
-    humidity: d.main.humidity,
-    wind_speed: Math.round(d.wind.speed * 3.6), // m/s to km/h
-    wind_direction: d.wind.deg,
-    pressure: d.main.pressure,
-    visibility: d.visibility ? Math.round(d.visibility / 1000) : null,
-    rainfall: d.rain ? (d.rain['1h'] || 0) : 0,
-    uv_index: null, // requires separate call on free tier
-    clouds: d.clouds.all,
-    sunrise: new Date(d.sys.sunrise * 1000).toISOString(),
-    sunset: new Date(d.sys.sunset * 1000).toISOString(),
-  }
-}
+const mapCurrentWeather = (d) => ({
+  location: d.name,
+  country: d.sys.country,
+  temperature: Math.round(d.main.temp),
+  feels_like: Math.round(d.main.feels_like),
+  condition: d.weather[0].description,
+  condition_main: d.weather[0].main,
+  icon: d.weather[0].icon,
+  humidity: d.main.humidity,
+  wind_speed: Math.round(d.wind.speed * 3.6), // m/s to km/h
+  wind_direction: d.wind.deg,
+  pressure: d.main.pressure,
+  visibility: d.visibility ? Math.round(d.visibility / 1000) : null,
+  rainfall: d.rain ? (d.rain['1h'] || 0) : 0,
+  uv_index: null, // requires separate call on free tier
+  clouds: d.clouds.all,
+  sunrise: new Date(d.sys.sunrise * 1000).toISOString(),
+  sunset: new Date(d.sys.sunset * 1000).toISOString(),
+})
 
-// ─── 7-Day Forecast ───────────────────────────────────────────────────────────
-const getWeatherForecast = async (location, days = 7) => {
-  const res = await axios.get(`${BASE_URL}/forecast`, {
-    params: { q: location, appid: API_KEY, units: 'metric', cnt: days * 8 },
-    timeout: 8000,
-  })
-
-  // Aggregate 3h intervals into daily summaries
+const mapForecast = (list, days) => {
   const dailyMap = {}
-  res.data.list.forEach((item) => {
+  list.forEach((item) => {
     const date = item.dt_txt.split(' ')[0]
     if (!dailyMap[date]) {
       dailyMap[date] = { temps: [], humidity: [], rainfall: 0, condition: item.weather[0].description, icon: item.weather[0].icon }
@@ -62,6 +47,42 @@ const getWeatherForecast = async (location, days = 7) => {
   }))
 }
 
+// ─── Current Weather ──────────────────────────────────────────────────────────
+const getCurrentWeather = async (location) => {
+  const res = await axios.get(`${BASE_URL}/weather`, {
+    params: { q: location, appid: API_KEY, units: 'metric' },
+    timeout: 8000,
+  })
+  return mapCurrentWeather(res.data)
+}
+
+const getCurrentWeatherByCoordinates = async (lat, lon) => {
+  const res = await axios.get(`${BASE_URL}/weather`, {
+    params: { lat, lon, appid: API_KEY, units: 'metric' },
+    timeout: 8000,
+  })
+  return mapCurrentWeather(res.data)
+}
+
+// ─── 7-Day Forecast ───────────────────────────────────────────────────────────
+const getWeatherForecast = async (location, days = 7) => {
+  const res = await axios.get(`${BASE_URL}/forecast`, {
+    params: { q: location, appid: API_KEY, units: 'metric', cnt: days * 8 },
+    timeout: 8000,
+  })
+
+  return mapForecast(res.data.list, days)
+}
+
+const getWeatherForecastByCoordinates = async (lat, lon, days = 7) => {
+  const res = await axios.get(`${BASE_URL}/forecast`, {
+    params: { lat, lon, appid: API_KEY, units: 'metric', cnt: days * 8 },
+    timeout: 8000,
+  })
+
+  return mapForecast(res.data.list, days)
+}
+
 // ─── Agricultural Advice based on weather ────────────────────────────────────
 const getAgriculturalAdvice = (weatherData) => {
   const advice = []
@@ -77,4 +98,10 @@ const getAgriculturalAdvice = (weatherData) => {
   return advice.length > 0 ? advice : ['Weather conditions are favorable for most farming activities.']
 }
 
-module.exports = { getCurrentWeather, getWeatherForecast, getAgriculturalAdvice }
+module.exports = {
+  getCurrentWeather,
+  getCurrentWeatherByCoordinates,
+  getWeatherForecast,
+  getWeatherForecastByCoordinates,
+  getAgriculturalAdvice,
+}

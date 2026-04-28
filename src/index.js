@@ -114,10 +114,13 @@ app.use('*', (req, res) => {
 app.use(errorHandler)
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 5001
-app.listen(PORT, () => {
-  console.log(`🚀 KrishiAi API v2 running on http://localhost:${PORT}`)
-  console.log(`📋 Docs: http://localhost:${PORT}/api/docs`)
-})
+const PORT = process.env.PORT || 5000
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 KrishiAi API v2 running on http://localhost:${PORT}`)
+    console.log(`📋 Docs: http://localhost:${PORT}/api/docs`)
+  })
+}
 
 module.exports = app
