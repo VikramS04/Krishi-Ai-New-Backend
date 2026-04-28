@@ -1,19 +1,36 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-    })
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`)
-  } catch (error) {
-    console.error(`❌ MongoDB Connection Error: ${error.message}`)
-    process.exit(1)
-  }
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error("Please define MONGODB_URI");
 }
 
-mongoose.connection.on('disconnected', () => {
-  console.warn('⚠️  MongoDB disconnected')
-})
+let cached = global.mongoose;
 
-module.exports = connectDB
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+const connectDB = async () => {
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MONGODB_URI, {
+      bufferCommands: false,
+      serverSelectionTimeoutMS: 5000,
+    }).then((mongoose) => mongoose);
+  }
+
+  cached.conn = await cached.promise;
+  console.log("✅ MongoDB Connected");
+  return cached.conn;
+};
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️ MongoDB disconnected');
+});
+
+module.exports = connectDB;
