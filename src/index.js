@@ -14,12 +14,22 @@ const weatherRoutes = require('./routes/weather')
 const communityRoutes = require('./routes/community')
 
 const app = express()
+let dbStatus = 'connecting'
+let dbError = null
 
 // ─── Connect Database ─────────────────────────────────────────────────────────
 const start = async () => {
-  await connectDB();
-};
-start();
+  try {
+    await connectDB()
+    dbStatus = 'connected'
+    dbError = null
+  } catch (error) {
+    dbStatus = 'error'
+    dbError = error
+    console.error('Database startup error:', error.message)
+  }
+}
+start()
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }))
 
@@ -52,11 +62,17 @@ app.use('/api', communityRoutes)
 app.get('/', (req, res) => res.json({ message: '🌱 KrishiAi API v2.0 is running', status: 'healthy' }))
 
 app.get('/api/health', (req, res) => {
-  res.json({
+  const statusCode = dbStatus === 'error' ? 503 : 200
+
+  res.status(statusCode).json({
     success: true,
-    status: 'healthy',
+    status: dbStatus === 'error' ? 'degraded' : 'healthy',
     version: '2.0.0',
-    database: 'MongoDB Atlas',
+    database: {
+      provider: 'MongoDB Atlas',
+      status: dbStatus,
+      error: dbError ? dbError.message : null,
+    },
     ai: 'Google Gemini 1.5 Flash',
     weather: 'OpenWeatherMap',
     timestamp: new Date().toISOString(),

@@ -1,36 +1,40 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error("Please define MONGODB_URI");
-}
-
-let cached = global.mongoose;
+let cached = global.mongoose
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = global.mongoose = { conn: null, promise: null }
 }
 
 const connectDB = async () => {
   if (cached.conn) {
-    return cached.conn;
+    return cached.conn
+  }
+
+  const mongoUri = process.env.MONGODB_URI
+  if (!mongoUri) {
+    throw new Error('Missing MONGODB_URI environment variable')
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI, {
+    cached.promise = mongoose.connect(mongoUri, {
       bufferCommands: false,
       serverSelectionTimeoutMS: 5000,
-    }).then((mongoose) => mongoose);
+    }).then((instance) => instance)
   }
 
-  cached.conn = await cached.promise;
-  console.log("✅ MongoDB Connected");
-  return cached.conn;
-};
+  try {
+    cached.conn = await cached.promise
+    console.log('MongoDB Connected')
+    return cached.conn
+  } catch (error) {
+    cached.promise = null
+    throw error
+  }
+}
 
 mongoose.connection.on('disconnected', () => {
-  console.warn('⚠️ MongoDB disconnected');
-});
+  console.warn('MongoDB disconnected')
+})
 
-module.exports = connectDB;
+module.exports = connectDB
