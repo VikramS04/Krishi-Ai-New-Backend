@@ -16,8 +16,10 @@ const communityRoutes = require('./routes/community')
 const app = express()
 
 // ─── Connect Database ─────────────────────────────────────────────────────────
-await connectDB()
-
+const start = async () => {
+  await connectDB();
+};
+start();
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }))
 
