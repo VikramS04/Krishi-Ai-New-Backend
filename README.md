@@ -1,28 +1,185 @@
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fpython%2Fflask3&demo-title=Flask%203%20%2B%20Vercel&demo-description=Use%20Flask%203%20on%20Vercel%20with%20Serverless%20Functions%20using%20the%20Python%20Runtime.&demo-url=https%3A%2F%2Fflask3-python-template.vercel.app%2F&demo-image=https://assets.vercel.com/image/upload/v1669994156/random/flask.png)
+# 🌱 KrishiAi Backend v2.0
 
-# Flask + Vercel
+Node.js · Express · MongoDB Atlas · Google Gemini AI · OpenWeatherMap
 
-This example shows how to use Flask 3 on Vercel with Serverless Functions using the [Python Runtime](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/python).
+---
 
-## Demo
+## Stack
 
-https://flask-python-template.vercel.app/
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js 18+ |
+| Framework | Express.js |
+| Database | MongoDB Atlas (free tier) |
+| AI | Google Gemini 1.5 Flash |
+| Weather | OpenWeatherMap API |
+| Hosting | Vercel (serverless) |
 
-## How it Works
+---
 
-This example uses the Web Server Gateway Interface (WSGI) with Flask to enable handling requests on Vercel with Serverless Functions.
+## Project Structure
 
-## Running Locally
-
-```bash
-npm i -g vercel
-vercel dev
+```
+krishi-backend/
+├── config/
+│   └── db.js                  # MongoDB Atlas connection
+├── src/
+│   ├── index.js               # App entry point
+│   ├── middleware/
+│   │   └── errorHandler.js    # Global error handling
+│   ├── models/
+│   │   ├── User.js
+│   │   ├── SoilAnalysis.js
+│   │   ├── DiseaseDetection.js
+│   │   └── CommunityPost.js
+│   ├── routes/
+│   │   ├── users.js
+│   │   ├── soil.js
+│   │   ├── crops.js
+│   │   ├── disease.js
+│   │   ├── weather.js
+│   │   └── community.js
+│   └── services/
+│       ├── geminiService.js   # All Gemini AI calls
+│       └── weatherService.js  # OpenWeatherMap calls
+├── .env.example
+├── package.json
+└── vercel.json
 ```
 
-Your Flask application is now available at `http://localhost:3000`.
+---
 
-## One-Click Deploy
+## Setup (Local)
 
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=vercel-examples):
+### 1. Install dependencies
+```bash
+npm install
+```
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fpython%2Fflask3&demo-title=Flask%203%20%2B%20Vercel&demo-description=Use%20Flask%203%20on%20Vercel%20with%20Serverless%20Functions%20using%20the%20Python%20Runtime.&demo-url=https%3A%2F%2Fflask3-python-template.vercel.app%2F&demo-image=https://assets.vercel.com/image/upload/v1669994156/random/flask.png)
+### 2. Create your .env file
+```bash
+cp .env.example .env
+```
+
+Then fill in:
+```
+MONGODB_URI=mongodb+srv://...
+GEMINI_API_KEY=...
+OPENWEATHER_API_KEY=...
+```
+
+### 3. Get your API keys
+
+**MongoDB Atlas** (already have this)
+- Go to your cluster → Connect → Drivers → copy the connection string
+- Replace `<password>` with your actual password
+
+**Google Gemini API** (free — 1500 requests/day)
+- Visit: https://aistudio.google.com/app/apikey
+- Create a new API key
+- Paste it as GEMINI_API_KEY
+
+**OpenWeatherMap** (free — 1000 calls/day)
+- Visit: https://openweathermap.org/api
+- Sign up → API Keys tab → copy your key
+- Paste it as OPENWEATHER_API_KEY
+
+### 4. Run locally
+```bash
+npm run dev
+```
+
+API runs at: http://localhost:5001
+
+---
+
+## Deploy to Vercel
+
+### 1. Install Vercel CLI
+```bash
+npm i -g vercel
+```
+
+### 2. Deploy
+```bash
+vercel
+```
+
+### 3. Add environment variables in Vercel dashboard
+- Go to your project → Settings → Environment Variables
+- Add: `MONGODB_URI`, `GEMINI_API_KEY`, `OPENWEATHER_API_KEY`
+- Redeploy after adding variables
+
+---
+
+## Update your Frontend
+
+Change the API_BASE_URL in your React app:
+```js
+const API_BASE_URL = 'https://your-project.vercel.app/api'
+```
+
+---
+
+## API Endpoints
+
+### Health
+```
+GET /api/health
+GET /api/docs
+```
+
+### Users
+```
+GET    /api/users
+POST   /api/users          { username, email, full_name, phone, location, farm_size, primary_crops }
+GET    /api/users/:id
+PUT    /api/users/:id
+DELETE /api/users/:id
+```
+
+### Soil Analysis (Gemini AI)
+```
+POST /api/soil/analyze     { user_id, location, ph_level, nitrogen, phosphorus, potassium, organic_matter, moisture_content }
+GET  /api/soil/history/:user_id
+GET  /api/soil/:id
+```
+
+### Crop Recommendations (Gemini AI)
+```
+POST /api/crops/recommend  { user_id }
+```
+
+### Disease Detection (Gemini Vision)
+```
+POST /api/disease/detect   { user_id, crop_type, symptoms? }
+POST /api/disease/upload   multipart/form-data: { user_id, crop_type, image }
+GET  /api/disease/history/:user_id
+```
+
+### Weather (OpenWeatherMap)
+```
+GET /api/weather/current/:location
+GET /api/weather/forecast/:location?days=7
+GET /api/weather/alerts/:location
+```
+
+### Community
+```
+GET  /api/community/posts?language=english&category=Soil Health&page=1
+POST /api/community/posts          { user_id, title, content, category, language }
+GET  /api/community/posts/:id
+POST /api/community/posts/:id/like     { user_id }
+POST /api/community/posts/:id/comments { user_id, content }
+GET  /api/community/trending
+GET  /api/community/search?q=wheat
+```
+
+---
+
+## Notes
+
+- AI endpoints are rate-limited to 20 requests/minute to protect your Gemini quota
+- Image uploads support JPG/PNG up to 10MB, processed in-memory (no disk — Vercel compatible)
+- Gemini 1.5 Flash is used for all AI — it's fast, accurate, and free tier is generous
+- Disease detection supports both text-based (symptoms) and image-based (Gemini Vision) analysis
