@@ -1,10 +1,13 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai')
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+
+const getModel = () => genAI.getGenerativeModel({ model: GEMINI_MODEL })
 
 // ─── Soil Analysis ────────────────────────────────────────────────────────────
 const analyzeSoilWithAI = async (soilData) => {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  const model = getModel()
 
   const prompt = `
 You are an expert agricultural soil scientist. Analyze the following soil data and respond ONLY with valid JSON — no markdown, no explanation, just the raw JSON object.
@@ -46,7 +49,7 @@ Include 3-5 recommendations and 6-8 suitable crops. Be specific to Indian agricu
 
 // ─── Crop Recommendations ─────────────────────────────────────────────────────
 const getCropRecommendationsWithAI = async (userData) => {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  const model = getModel()
 
   const prompt = `
 You are an expert agricultural advisor for Indian farmers. Based on the following farmer profile, provide crop recommendations. Respond ONLY with valid JSON.
@@ -84,7 +87,7 @@ Include 4-6 crops suitable for Indian agriculture.
 
 // ─── Disease Detection (text-based) ──────────────────────────────────────────
 const detectDiseaseWithAI = async (cropType, symptoms = null) => {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  const model = getModel()
 
   const prompt = `
 You are a plant pathologist and crop disease expert. Analyze the following crop information and respond ONLY with valid JSON.
@@ -124,7 +127,7 @@ Be specific to Indian farming conditions. Include 3-4 treatment recommendations 
 
 // ─── Disease Detection with Image ─────────────────────────────────────────────
 const detectDiseaseFromImageWithAI = async (cropType, imageBase64, mimeType = 'image/jpeg') => {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  const model = getModel()
 
   const prompt = `
 You are a plant pathologist. Analyze this crop image for disease detection. The crop is: ${cropType}.
