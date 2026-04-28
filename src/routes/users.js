@@ -28,6 +28,32 @@ router.post('/users', async (req, res) => {
   }
 })
 
+// POST /api/users/login
+router.post('/users/login', async (req, res) => {
+  try {
+    const { identifier } = req.body
+    if (!identifier || !identifier.trim()) {
+      return res.status(400).json({ success: false, error: 'Username or email is required' })
+    }
+
+    const normalizedIdentifier = identifier.trim()
+    const user = await User.findOne({
+      $or: [
+        { email: normalizedIdentifier.toLowerCase() },
+        { username: normalizedIdentifier },
+      ],
+    }).select('-__v')
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'No farmer profile found with that username or email' })
+    }
+
+    res.json({ success: true, data: user })
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
 // GET /api/users/:id
 router.get('/users/:id', async (req, res) => {
   try {
