@@ -30,6 +30,23 @@ const start = async () => {
   }
 }
 start()
+
+const ensureDatabaseConnection = async (req, res, next) => {
+  try {
+    await connectDB()
+    dbStatus = 'connected'
+    dbError = null
+    next()
+  } catch (error) {
+    dbStatus = 'error'
+    dbError = error
+    res.status(503).json({
+      success: false,
+      error: 'Database connection unavailable',
+      details: error.message,
+    })
+  }
+}
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }))
 
@@ -49,14 +66,6 @@ app.use('/api/soil/analyze', aiLimiter)
 app.use('/api/disease/detect', aiLimiter)
 app.use('/api/disease/upload', aiLimiter)
 app.use('/api/crops/recommend', aiLimiter)
-
-// ─── Routes ───────────────────────────────────────────────────────────────────
-app.use('/api', userRoutes)
-app.use('/api', soilRoutes)
-app.use('/api', cropRoutes)
-app.use('/api', diseaseRoutes)
-app.use('/api', weatherRoutes)
-app.use('/api', communityRoutes)
 
 // ─── Health & Docs ────────────────────────────────────────────────────────────
 app.get('/', (req, res) => res.json({ message: '🌱 KrishiAi API v2.0 is running', status: 'healthy' }))
@@ -122,6 +131,15 @@ app.get('/api/docs', (req, res) => {
     },
   })
 })
+
+// ─── Database-backed API Routes ───────────────────────────────────────────────
+app.use('/api', ensureDatabaseConnection)
+app.use('/api', userRoutes)
+app.use('/api', soilRoutes)
+app.use('/api', cropRoutes)
+app.use('/api', diseaseRoutes)
+app.use('/api', weatherRoutes)
+app.use('/api', communityRoutes)
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use('*', (req, res) => {
